@@ -478,7 +478,7 @@ def generate_logs_page(filtered):
 
 app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
-    dcc.Store(id="session-store", storage_type="session"),
+    dcc.Store(id="session-store", storage_type="local"),
     html.Div(id="page-content"),
 ])
 
@@ -639,6 +639,7 @@ def display_page(pathname, session):
     Input("url", "pathname"),
     Input("filter-country", "value"),
     Input("filter-service", "value"),
+    prevent_initial_call=True,
 )
 def update_dynamic_content(pathname, country_filter, service_filter):
     if not pathname: return dash.no_update
@@ -663,7 +664,7 @@ def update_dynamic_content(pathname, country_filter, service_filter):
         return generate_overview_page(filtered)
 
 @app.callback(
-    Output("session-store", "data"),
+    Output("session-store", "data", allow_duplicate=True),
     Output("login-error", "children"),
     Input("login-btn", "n_clicks"),
     State("login-username", "value"),
