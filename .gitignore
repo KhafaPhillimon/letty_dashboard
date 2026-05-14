@@ -1,0 +1,16 @@
+# Virtual Environment (never push to Render/GitHub)
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS Files
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# Local dev only
+*.log
+logo_base64.txt
