@@ -642,8 +642,9 @@ def display_page(pathname, session):
     prevent_initial_call=True,
 )
 def update_dynamic_content(pathname, country_filter, service_filter):
-    if not pathname: return dash.no_update
-    
+    if not pathname:
+        return dash.no_update
+
     filtered = df.copy()
     if country_filter and country_filter != "ALL":
         filtered = filtered[filtered["country"] == country_filter]
@@ -663,9 +664,11 @@ def update_dynamic_content(pathname, country_filter, service_filter):
     else:
         return generate_overview_page(filtered)
 
+# ── Login: PRIMARY owner of session-store (no allow_duplicate) ───────────────
 @app.callback(
-    Output("session-store", "data", allow_duplicate=True),
+    Output("session-store", "data"),           # PRIMARY – owns this output
     Output("login-error", "children"),
+    Output("url", "pathname", allow_duplicate=True),  # Force redirect on success
     Input("login-btn", "n_clicks"),
     State("login-username", "value"),
     State("login-password", "value"),
@@ -673,19 +676,20 @@ def update_dynamic_content(pathname, country_filter, service_filter):
 )
 def handle_login(n_clicks, username, password):
     if n_clicks is None or n_clicks == 0:
-        return dash.no_update, ""
-        
+        return dash.no_update, "", dash.no_update
+
     if not username or not password:
-        return dash.no_update, "Credentials required."
-    
+        return dash.no_update, "Credentials required.", dash.no_update
+
     u = username.strip().lower()
     p = password.strip()
-    
-    if u in USERS and USERS[u] == p:
-        return {"logged_in": True, "user": u}, ""
-    
-    return dash.no_update, "Invalid access credentials."
 
+    if u in USERS and USERS[u] == p:
+        return {"logged_in": True, "user": u}, "", "/"
+
+    return dash.no_update, "Invalid access credentials.", dash.no_update
+
+# ── Logout: secondary writer – must have allow_duplicate ─────────────────────
 @app.callback(
     Output("session-store", "data", allow_duplicate=True),
     Output("url", "pathname", allow_duplicate=True),
@@ -693,9 +697,9 @@ def handle_login(n_clicks, username, password):
     prevent_initial_call=True,
 )
 def handle_logout(n_clicks):
-    if n_clicks > 0:
+    if n_clicks and n_clicks > 0:
         return {"logged_in": False}, "/"
     return dash.no_update, dash.no_update
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    app.run(debug=False, host="0.0.0.0", port=8050)
